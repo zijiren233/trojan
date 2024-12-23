@@ -194,16 +194,11 @@ The NAT config is for transparent proxy. You'll need to [setup iptables rules](h
         "fast_open": false,
         "fast_open_qlen": 20
     },
-    "mysql": {
+    "v2board": {
         "enabled": false,
-        "server_addr": "127.0.0.1",
-        "server_port": 3306,
-        "database": "trojan",
-        "username": "trojan",
-        "password": "",
-        "key": "",
-        "cert": "",
-        "ca": ""
+        "api_host": "http://xxx.com",
+        "api_key": "xxx",
+        "node_id": 1
     }
 }
 ```
@@ -237,6 +232,5 @@ The NAT config is for transparent proxy. You'll need to [setup iptables rules](h
     - `reuse_port`: whether to enable TCP port reuse (kernel support required)
     - `fast_open`: whether to enable TCP Fast Open (kernel support required)
     - `fast_open_qlen`: the server's limit on the size of the queue of TFO requests that have not yet completed the three-way handshake
-- `mysql`: see [Authenticator](authenticator)
 
 [Homepage](.) | [Prev Page](protocol) | [Next Page](authenticator)

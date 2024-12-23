@@ -1,39 +1,36 @@
-/*
- * This file is part of the trojan project.
- * Trojan is an unidentifiable mechanism that helps you bypass GFW.
- * Copyright (C) 2017-2020  The Trojan Authors.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #ifndef _AUTHENTICATOR_H_
 #define _AUTHENTICATOR_H_
 
-#ifdef ENABLE_MYSQL
-#include <mysql.h>
-#endif // ENABLE_MYSQL
 #include "config.h"
+
+#ifdef ENABLE_V2BOARD
+#include <string>
+#include <mutex>
+#include <unordered_map>
+#endif
 
 class Authenticator {
 private:
-#ifdef ENABLE_MYSQL
-    MYSQL con{};
-#endif // ENABLE_MYSQL
-    enum {
-        PASSWORD_LENGTH=56
-    };
-    static bool is_valid_password(const std::string &password);
+#ifdef ENABLE_V2BOARD
+    struct V2Board {
+        std::string api_host;
+        std::string api_key;
+        uint32_t node_id;
+        // uuid -> id
+        std::unordered_map<std::string, uint32_t> users_map;
+        // sha224(uuid) -> uuid
+        std::unordered_map<std::string, std::string> sha224_uuid_map;
+        // uuid -> traffic stats
+        std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> traffic_stats;
+        std::mutex users_mutex;
+        std::mutex stats_mutex;
+    } v2board;
+
+    void update_users();
+    void push_traffic();
+    bool fetch_user_list();
+#endif
+
 public:
     explicit Authenticator(const Config &config);
     bool auth(const std::string &password);

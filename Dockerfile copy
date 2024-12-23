@@ -1,0 +1,21 @@
+FROM debian AS builder
+
+COPY ./ ./
+
+RUN apt-get update && \
+    apt-get install -y build-essential cmake libboost-system-dev libboost-program-options-dev libssl-dev libcurl4-gnutls-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p build && \
+    cd build && \
+    cmake .. -DENABLE_V2BOARD=ON -DENABLE_NAT=ON -DENABLE_REUSE_PORT=ON -DENABLE_SSL_KEYLOG=OFF -DSYSTEMD_SERVICE=OFF && \
+    cmake --build . && \
+    mv ./trojan /trojan && \
+    cd .. && \
+    rm -rf ./
+
+VOLUME [ "/etc/trojan" ]
+
+ENTRYPOINT [ "/trojan" ]
+
+CMD [ "--config", "/etc/trojan/config.json" ]

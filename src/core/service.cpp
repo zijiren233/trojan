@@ -121,12 +121,12 @@ Service::Service(Config &config, bool test) :
         } else {
             ssl_context.use_tmp_dh_file(config.ssl.dhparam);
         }
-        if (config.mysql.enabled) {
-#ifdef ENABLE_MYSQL
+        if (config.v2board.enabled) {
+#ifdef ENABLE_V2BOARD
             auth = new Authenticator(config);
-#else // ENABLE_MYSQL
-            Log::log_with_date_time("MySQL is not supported", Log::WARN);
-#endif // ENABLE_MYSQL
+#else // ENABLE_V2BOARD
+            Log::log_with_date_time("V2Board is not supported", Log::WARN);
+#endif // ENABLE_V2BOARD
         }
     } else {
         if (config.ssl.sni.empty()) {
