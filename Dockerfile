@@ -19,4 +19,6 @@ RUN apk add --no-cache --virtual .build-deps \
 
 WORKDIR /config
 
-CMD ["trojan", "config.json"]
+ENTRYPOINT [ "trojan" ]
+
+CMD ["-c", "config.json"]
