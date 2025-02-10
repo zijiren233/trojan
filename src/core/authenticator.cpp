@@ -96,21 +96,24 @@ bool Authenticator::auth(const string &password)
     return it != v2board.sha224_uuid_map.end() && v2board.users_map.count(it->second);
 }
 
-void Authenticator::record(const string &password, uint64_t download, uint64_t upload)
+bool Authenticator::record(const string &password, uint64_t download, uint64_t upload)
 {
     string uuid;
     {
         lock_guard<mutex> users_lock(v2board.users_mutex);
         auto it = v2board.sha224_uuid_map.find(password);
-        if (it == v2board.sha224_uuid_map.end()) return;
+        if (it == v2board.sha224_uuid_map.end()) return false;
         uuid = it->second;
     }
+
+    // Log::log_with_date_time("Recording traffic for user: " + uuid + " download: " + to_string(download) + " upload: " + to_string(upload), Log::INFO);
 
     {
         lock_guard<mutex> stats_lock(v2board.stats_mutex);
         v2board.traffic_stats[uuid].first += download;
         v2board.traffic_stats[uuid].second += upload;
     }
+    return true;
 }
 
 Authenticator::~Authenticator()
@@ -221,7 +224,7 @@ void Authenticator::push_traffic()
 
 Authenticator::Authenticator(const Config &) {}
 bool Authenticator::auth(const string &) { return true; }
-void Authenticator::record(const string &, uint64_t, uint64_t) {}
+bool Authenticator::record(const string &, uint64_t, uint64_t) {}
 Authenticator::~Authenticator() {}
 
 #endif // ENABLE_V2BOARD

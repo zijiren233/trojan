@@ -237,6 +237,13 @@ void ServerSession::in_recv(const string &data) {
         });
     } else if (status == FORWARD) {
         sent_len += data.length();
+        if (auth && !auth_password.empty()) {
+            if (!auth->record(auth_password, 0, data.length())) {
+                Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
+                destroy();
+                return;
+            }
+        }
         out_async_write(data);
     } else if (status == UDP_FORWARD) {
         udp_data_buf += data;
@@ -255,6 +262,13 @@ void ServerSession::in_sent() {
 void ServerSession::out_recv(const string &data) {
     if (status == FORWARD) {
         recv_len += data.length();
+        if (auth && !auth_password.empty()) {
+            if (!auth->record(auth_password, data.length(), 0)) {
+                Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
+                destroy();
+                return;
+            }
+        }
         in_async_write(data);
     }
 }
@@ -268,6 +282,13 @@ void ServerSession::out_sent() {
 void ServerSession::udp_recv(const string &data, const udp::endpoint &endpoint) {
     if (status == UDP_FORWARD) {
         size_t length = data.length();
+        if (auth && !auth_password.empty()) {
+            if (!auth->record(auth_password, length, 0)) {
+                Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
+                destroy();
+                return;
+            }
+        }
         Log::log_with_endpoint(in_endpoint, "received a UDP packet of length " + to_string(length) + " bytes from " + endpoint.address().to_string() + ':' + to_string(endpoint.port()));
         recv_len += length;
         in_async_write(UDPPacket::generate(endpoint, data));
@@ -321,6 +342,14 @@ void ServerSession::udp_sent() {
                 udp_async_read();
             }
             sent_len += packet.length;
+
+            if (auth && !auth_password.empty()) {
+                if (!auth->record(auth_password, 0, packet.length)) {
+                    Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
+                    destroy();
+                    return;
+                }
+            }
             udp_async_write(packet.payload, *iterator);
         });
     }
@@ -332,9 +361,6 @@ void ServerSession::destroy() {
     }
     status = DESTROY;
     Log::log_with_endpoint(in_endpoint, "disconnected, " + to_string(recv_len) + " bytes received, " + to_string(sent_len) + " bytes sent, lasted for " + to_string(time(nullptr) - start_time) + " seconds", Log::INFO);
-    if (auth && !auth_password.empty()) {
-        auth->record(auth_password, recv_len, sent_len);
-    }
     boost::system::error_code ec;
     resolver.cancel();
     udp_resolver.cancel();
