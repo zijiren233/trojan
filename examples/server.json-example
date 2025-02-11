@@ -37,15 +37,17 @@
         "fast_open": false,
         "fast_open_qlen": 20
     },
-    "mysql": {
-        "enabled": false,
-        "server_addr": "127.0.0.1",
-        "server_port": 3306,
-        "database": "trojan",
-        "username": "trojan",
-        "password": "",
-        "key": "",
-        "cert": "",
-        "ca": ""
-    }
+    "v2board": {
+        "enabled": true,
+        "api_host": "http://example.com",
+        "api_key": "key",
+        "node_id": 1
+    },
+    "blocked_domains": [
+        "google\\.com",
+        "facebook\\.com",
+        "twitter\\.com",
+        "instagram\\.com",
+        "youtube\\.com"
+    ]
 }

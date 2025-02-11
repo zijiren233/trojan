@@ -23,6 +23,7 @@
 #include <stdexcept>
 #include <boost/property_tree/json_parser.hpp>
 #include <openssl/evp.h>
+#include <regex>
 using namespace std;
 using namespace boost::property_tree;
 
@@ -81,6 +82,21 @@ void Config::populate(const ptree &tree)
     }
     udp_timeout = tree.get("udp_timeout", 60);
     log_level = static_cast<Log::Level>(tree.get("log_level", 1));
+
+    blocked_domains.clear();
+    if (auto blocked_domains_node = tree.get_child_optional("blocked_domains")) {
+        for (const auto &item : *blocked_domains_node) {
+            try {
+                blocked_domains.emplace_back(
+                    item.second.get_value<string>(),
+                    std::regex::icase | std::regex::optimize
+                );
+            } catch (const regex_error &e) {
+                Log::log_with_date_time("Invalid blocked domain: " + item.second.get_value<string>(), Log::ERROR);
+            }
+        }
+    }
+
     ssl.verify = tree.get("ssl.verify", true);
     ssl.verify_hostname = tree.get("ssl.verify_hostname", true);
     ssl.cert = tree.get("ssl.cert", string());

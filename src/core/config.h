@@ -6,6 +6,8 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include "log.h"
+#include <vector>
+#include <regex>
 
 class Config {
 public:
@@ -24,6 +26,7 @@ public:
     std::map<std::string, std::string> password;
     int udp_timeout;
     Log::Level log_level;
+    std::vector<std::regex> blocked_domains;
 
     class SSLConfig {
     public:

@@ -20,6 +20,7 @@
 #include "serversession.h"
 #include "proto/trojanrequest.h"
 #include "proto/udppacket.h"
+#include <regex>
 using namespace std;
 using namespace boost::asio::ip;
 using namespace boost::asio::ssl;
@@ -174,9 +175,15 @@ void ServerSession::in_recv(const string &data) {
                 udp_data_buf = out_write_buf;
                 udp_sent();
                 return;
-            } else {
-                Log::log_with_endpoint(in_endpoint, "requested connection to " + req.address.address + ':' + to_string(req.address.port), Log::INFO);
             }
+            for (const auto &regex : config.blocked_domains) {
+                if (std::regex_match(query_addr, regex)) {
+                    Log::log_with_endpoint(in_endpoint, "blocked domain: " + query_addr, Log::WARN);
+                    destroy();
+                    return;
+                }
+            }
+            Log::log_with_endpoint(in_endpoint, "requested connection to " + req.address.address + ':' + to_string(req.address.port), Log::INFO);
         } else {
             Log::log_with_endpoint(in_endpoint, "not trojan request, connecting to " + query_addr + ':' + query_port, Log::WARN);
             out_write_buf = data;
@@ -312,6 +319,13 @@ void ServerSession::udp_sent() {
         Log::log_with_endpoint(in_endpoint, "sent a UDP packet of length " + to_string(packet.length) + " bytes to " + packet.address.address + ':' + to_string(packet.address.port));
         udp_data_buf = udp_data_buf.substr(packet_len);
         string query_addr = packet.address.address;
+        for (const auto &regex : config.blocked_domains) {
+            if (std::regex_match(query_addr, regex)) {
+                Log::log_with_endpoint(in_endpoint, "blocked domain: " + query_addr, Log::WARN);
+                destroy();
+                return;
+            }
+        }
         auto self = shared_from_this();
         udp_resolver.async_resolve(query_addr, to_string(packet.address.port), [this, self, packet, query_addr](const boost::system::error_code error, const udp::resolver::results_type& results) {
             if (error || results.empty()) {
