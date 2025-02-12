@@ -245,7 +245,7 @@ void ServerSession::in_recv(const string &data) {
     } else if (status == FORWARD) {
         sent_len += data.length();
         if (auth && !auth_password.empty()) {
-            if (!auth->record(auth_password, 0, data.length())) {
+            if (!auth->record(auth_password, data.length(), 0)) {
                 Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
                 destroy();
                 return;
@@ -270,7 +270,7 @@ void ServerSession::out_recv(const string &data) {
     if (status == FORWARD) {
         recv_len += data.length();
         if (auth && !auth_password.empty()) {
-            if (!auth->record(auth_password, data.length(), 0)) {
+            if (!auth->record(auth_password, 0, data.length())) {
                 Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
                 destroy();
                 return;
@@ -290,7 +290,7 @@ void ServerSession::udp_recv(const string &data, const udp::endpoint &endpoint) 
     if (status == UDP_FORWARD) {
         size_t length = data.length();
         if (auth && !auth_password.empty()) {
-            if (!auth->record(auth_password, length, 0)) {
+            if (!auth->record(auth_password, 0, length)) {
                 Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
                 destroy();
                 return;
@@ -358,7 +358,7 @@ void ServerSession::udp_sent() {
             sent_len += packet.length;
 
             if (auth && !auth_password.empty()) {
-                if (!auth->record(auth_password, 0, packet.length)) {
+                if (!auth->record(auth_password, packet.length, 0)) {
                     Log::log_with_endpoint(in_endpoint, "user no longer exists, closing connection", Log::WARN);
                     destroy();
                     return;

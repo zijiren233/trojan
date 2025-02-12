@@ -80,7 +80,7 @@ Authenticator::Authenticator(const Config &config)
     {
         while (true)
         {
-            this_thread::sleep_for(chrono::minutes(3));
+            this_thread::sleep_for(chrono::minutes(5));
             Log::log_with_date_time("Updating user list from V2Board", Log::INFO);
             this->update_users();
             Log::log_with_date_time("Pushing traffic data to V2Board", Log::INFO);
